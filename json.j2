@@ -1,0 +1,30 @@
+{#
+Couldn't be easier, really...
+
+Input
+-----
+input_var:
+  foo: bar
+  baz:
+   - waldo
+   - fred
+  corge:
+    grault: 1234
+    plugh: xyzzy
+
+Rendered
+--------
+{
+    "baz": [
+        "waldo",
+        "fred"
+    ],
+    "corge": {
+        "grault": 1234,
+        "plugh": "xyzzy"
+    },
+    "foo": "bar"
+}
+
+-#}
+{{ input_var | to_nice_json }}

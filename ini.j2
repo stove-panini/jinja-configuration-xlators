@@ -1,0 +1,36 @@
+{#
+Input
+-----
+input_var:
+  - foo:
+      bar: baz
+      qux: quuz
+  - corge:
+     grault: garply
+  - plugh:
+      fred: xyzzy
+      waldo: 1234
+
+Rendered
+--------
+[foo]
+bar = baz
+qux = quuz
+
+[corge]
+grault = garply
+
+[plugh]
+fred = xyzzy
+waldo = 1234
+
+-#}
+{% for i in input_var %}
+{% for section, options in i.items() %}
+[{{ section }}]
+{% for k, v in options.items() %}
+{{ k }} = {{ v }}
+{% endfor %}
+
+{% endfor %}
+{% endfor %}

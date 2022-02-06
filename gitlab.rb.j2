@@ -1,0 +1,99 @@
+{#
+Let's say {{ gitlab_domain }} uses {{ ansible_fqdn }} in the role defaults
+
+Input
+-----
+input_var:
+  - gitlab_rails:
+      # Email
+      smtp_enable: true
+      smtp_address: smtp.mailgun.org
+      smtp_domain: mail.example.com
+      smtp_port: 587
+      smtp_authentication: plain
+      smtp_enable_starttls_auto: true
+      smtp_user_name: gitlab@mail.example.com
+      smtp_password: 12345
+      gitlab_email_from: gitlab@example.com
+      gitlab_email_display_name: Example GitLab
+      gitlab_email_reply_to: noreply@example.com
+
+      # LDAP - note that the Ruby hash is a literal block scalar, "|"
+       ldap_enabled: true
+       ldap_servers: |
+         {
+           'main' => {
+             'label' => 'FreeIPA',
+             'hosts' => [
+               ['replica1.ipa.example.com', 636],
+               ['replica2.ipa.example.com', 636]
+             ],
+             'encryption' => 'simple_tls',
+             'tls_options' => {
+               'ca_file' => '/etc/ipa/ca.crt'
+             },
+             'bind_dn' => 'uid=reader,cn=sysaccounts,cn=etc,dc=ipa,dc=example,dc=com',
+             'password' => 'reader',
+             'uid' => 'uid',
+             'base' => 'cn=users,cn=accounts,dc=ipa,dc=example,dc=com',
+           }
+         }
+
+  - nginx:
+      redirect_http_to_https: true
+      ssl_certificate: /etc/letsencrypt/live/{{ gitlab_domain }}/fullchain.pem
+      ssl_certificate_key: /etc/letsencrypt/live/{{ gitlab_domain }}/privkey.pem
+
+Rendered
+--------
+external_url 'https://gitlab.example.com'
+
+gitlab_rails['smtp_enable'] = true
+gitlab_rails['smtp_address'] = 'smtp.mailgun.org'
+gitlab_rails['smtp_domain'] = 'mail.example.com'
+gitlab_rails['smtp_port'] = 587
+gitlab_rails['smtp_authentication'] = 'plain'
+gitlab_rails['smtp_enable_starttls_auto'] = true
+gitlab_rails['smtp_user_name'] = 'gitlab@mail.example.com'
+gitlab_rails['smtp_password'] = 12345
+gitlab_rails['gitlab_email_from'] = 'gitlab@example.com'
+gitlab_rails['gitlab_email_display_name'] = 'Example GitLab'
+gitlab_rails['gitlab_email_reply_to'] = 'noreply@example.com'
+gitlab_rails['ldap_enabled']: true
+gitlab_rails['ldap_servers']: {
+    'main' => {
+      'label' => 'FreeIPA',
+      'hosts' => [
+        ['replica1.ipa.example.com', 636],
+        ['replica2.ipa.example.com', 636]
+      ],
+      'encryption' => 'simple_tls',
+      'tls_options' => {
+        'ca_file' => '/etc/ipa/ca.crt'
+      },
+      'bind_dn' => 'uid=reader,cn=sysaccounts,cn=etc,dc=ipa,dc=example,dc=com',
+      'password' => 'reader',
+      'uid' => 'uid',
+      'base' => 'cn=users,cn=accounts,dc=ipa,dc=example,dc=com',
+  }
+}
+nginx['redirect_http_to_https'] = true
+nginx['ssl_certificate'] = /etc/letsencrypt/live/gitlab.example.com/fullchain.pem
+nginx['ssl_certificate_key'] = /etc/letsencrypt/live/gitlab.example.com/privkey.pem
+
+-#}
+external_url 'https://{{ gitlab_domain }}'
+
+{% for i in input_var %}
+{% for section, options in i.items() %}
+{% for k, v in options.items() %}
+{% if v is string and '\n' not in v %}
+{{ section }}['{{ k }}'] = '{{ v }}'
+{% elif v is boolean %}
+{{ section }}['{{ k }}'] = {{ v | lower }}
+{% else %}
+{{ section }}['{{ k }}'] = {{ v }}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endfor %}
